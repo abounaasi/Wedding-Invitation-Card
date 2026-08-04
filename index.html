@@ -565,6 +565,27 @@
         overflow: hidden;
         pointer-events: none;
         user-select: none;
+        /* Feather only the TOP and BOTTOM of the crop window — every vine's
+           left/right edge butts against either a corner bouquet or the
+           next vine in the chain, so keeping those full-opacity is what
+           lets the four slivers read as one unbroken garland. Only the
+           top (where a stem meets open air above the section) and the
+           dangling bottom tip (where it ends in open cream) need to melt
+           away instead of stopping in a hard line. */
+        -webkit-mask-image: linear-gradient(
+          to bottom,
+          transparent 0%,
+          #000 16%,
+          #000 76%,
+          transparent 100%
+        );
+        mask-image: linear-gradient(
+          to bottom,
+          transparent 0%,
+          #000 16%,
+          #000 76%,
+          transparent 100%
+        );
       }
 
       .verse-vine img {
@@ -598,7 +619,7 @@
       /* B — slender leafy stem, from the RIGHT bouquet
          crop (520, 930, 170, 330) of 829x1260 */
       .verse-vine.vine-b {
-        left: 50%;
+        left: 48%;
         width: 9%;
         max-width: 58px;
         margin-top: -1%;
@@ -615,7 +636,7 @@
       /* C — fine budding branch, from the RIGHT bouquet, hung upside down
          crop (630, 30, 160, 300) of 829x1260 */
       .verse-vine.vine-c {
-        left: 38%;
+        left: 40%;
         width: 8%;
         max-width: 52px;
         margin-top: 4%;
@@ -1085,30 +1106,54 @@
        ========================================================= */
       .footer {
         position: relative;
-        padding: 30px 24px calc(min(100vw, 620px) * 0.56 + 18px);
+        padding: 30px 24px calc(min(100vw, 620px) * 0.627 + 22px);
         overflow: hidden;
         color: var(--gold);
         text-align: center;
       }
 
+      /* Slightly larger than the original base image (was min(100%, 620px))
+         so the heart the two bouquets already imply reads more clearly —
+         .footer keeps overflow:hidden, so the extra width just clips
+         evenly off both sides. */
       .footer-florals {
         position: absolute;
         bottom: 0;
         left: 50%;
         z-index: 0;
-        width: min(100%, 620px);
+        width: min(112%, 694px);
         transform: translateX(-50%);
         pointer-events: none;
         user-select: none;
       }
 
-      .footer p {
-        position: relative;
+      /* Rose-and-leaf heart wreath (names already painted into the art)
+         that fills the gap the two base bouquets leave between them.
+         Its own background isn't quite the page cream, so the mask
+         feathers the image's edges to full transparency — the fade
+         sits entirely in the wreath art's blank margin, never touching
+         the flowers, and dissolves the boundary regardless of the
+         slight tone difference. */
+      .footer-heart-wreath {
+        position: absolute;
+        left: 50%;
         z-index: 1;
-        margin: 0;
-        font-family: var(--script);
-        font-size: clamp(30px, 8vw, 40px);
-        line-height: 1.4;
+        bottom: calc(min(100vw, 620px) * 0.627 * 0.5);
+        width: min(260px, 62%);
+        height: auto;
+        transform: translateX(-50%);
+        -webkit-mask-image: radial-gradient(
+          ellipse 48% 48% at 50% 50%,
+          #000 92%,
+          transparent 100%
+        );
+        mask-image: radial-gradient(
+          ellipse 48% 48% at 50% 50%,
+          #000 92%,
+          transparent 100%
+        );
+        pointer-events: none;
+        user-select: none;
       }
 
       /* =========================================================
@@ -1564,9 +1609,11 @@
         alt=""
         aria-hidden="true"
       />
-      <div class="wrap">
-        <p class="reveal">Jalal & Jana</p>
-      </div>
+      <img
+        class="footer-heart-wreath reveal-soft"
+        src="Upscale%20Image%20to%20High%20Quality.png"
+        alt="Jalal &amp; Jana"
+      />
     </footer>
     <p style="text-align: center">
       Designed with love by <br /><b>Ahmad Abounaasi &#9825;</b>
