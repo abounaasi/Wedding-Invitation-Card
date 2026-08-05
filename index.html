@@ -322,7 +322,9 @@
         position: fixed;
         inset: 0;
         z-index: 100001;
-        background: #000;
+        /* Cream, not black — matches the envelope poster underneath so
+           there's never a solid black frame while the video buffers. */
+        background: var(--cream);
         opacity: 0;
         pointer-events: none;
         transition: opacity 1s ease;
@@ -1340,6 +1342,7 @@
       <video
         id="introVideo"
         class="intro-video"
+        poster="envelope_image.png"
         muted
         playsinline
         webkit-playsinline
@@ -1395,13 +1398,7 @@
             webkit-playsinline
             preload="metadata"
           >
-            <!-- H.264 first: decodes everywhere and is ~5x lighter -->
             <source src="swans.mp4" type="video/mp4" />
-            <source
-              src="https://pub-4dc8201144ca418fb604349c73e8c724.r2.dev/Swans2.mov"
-              type="video/quicktime"
-            />
-            <source src="Swans2.mov" type="video/quicktime" />
           </video>
           <div class="hero-veil" aria-hidden="true"></div>
 
@@ -1774,29 +1771,30 @@
           var introStarted = false;
           var videoFading = false;
 
-          /* The intro video only needs its metadata up front (see the
-             preload="metadata" attribute) so it doesn't compete with
-             the page's own render on a slow connection. Once the
-             browser is idle, switch it to full preload so the file is
-             buffered and ready by the time the guest actually taps. */
-          function primeIntroVideo() {
-            introVideo.preload = "auto";
-            introVideo.load();
-          }
-          if ("requestIdleCallback" in window) {
-            requestIdleCallback(primeIntroVideo, { timeout: 2000 });
-          } else {
-            setTimeout(primeIntroVideo, 300);
-          }
-
           function showAudioButton() {
             audioToggle.classList.add("is-visible");
+          }
+
+          function revealIntroShell() {
+            videoShell.classList.add("is-visible");
+          }
+
+          /* Hero video only starts once the intro video has finished (or
+             is about to), so the two never compete for bandwidth/decoding
+             at the same time. It has no autoplay attribute for the same
+             reason — nothing to show until now anyway. */
+          function startHeroVideo() {
+            var heroPlayAttempt = heroVideo.play();
+            if (heroPlayAttempt && typeof heroPlayAttempt.catch === "function") {
+              heroPlayAttempt.catch(function () {});
+            }
           }
 
           function endIntro() {
             if (videoFading) return;
             videoFading = true;
             videoShell.classList.remove("is-visible");
+            startHeroVideo();
             setTimeout(function () {
               videoShell.style.display = "none";
               document.body.classList.remove("intro-active");
@@ -1824,7 +1822,6 @@
             var audioAttempt = audio.play();
             armAudioRetry();
 
-            videoShell.classList.add("is-visible");
             var playAttempt = introVideo.play();
             if (playAttempt && typeof playAttempt.catch === "function") {
               playAttempt.catch(function () {
@@ -1832,14 +1829,19 @@
               });
             }
 
-            /* Hero video has no autoplay attribute — it had nothing to
-               show until now anyway (hidden behind the envelope, then
-               the opaque intro shell). Starting it here, muted, lets
-               it buffer/play in the background so it's already
-               running smoothly by the time the shell fades away. */
-            var heroPlayAttempt = heroVideo.play();
-            if (heroPlayAttempt && typeof heroPlayAttempt.catch === "function") {
-              heroPlayAttempt.catch(function () {});
+            /* Don't reveal the intro shell until the video actually has a
+               frame ready (readyState >= 2 = HAVE_CURRENT_DATA). The poster
+               is already on screen underneath, so there's no black flash
+               either way — this just avoids swapping to the video element
+               before it has anything to paint. A short safety timeout
+               covers the rare case where readiness never fires. */
+            if (introVideo.readyState >= 2) {
+              revealIntroShell();
+            } else {
+              introVideo.addEventListener("loadeddata", revealIntroShell, {
+                once: true,
+              });
+              setTimeout(revealIntroShell, 2500);
             }
 
             if (audioAttempt && typeof audioAttempt.catch === "function") {
