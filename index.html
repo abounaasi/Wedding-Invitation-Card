@@ -1279,7 +1279,7 @@
         type="audio/mp3"
       />
     </audio>-->
-    <audio id="weiAudio" loop>
+    <audio id="weiAudio" loop preload="auto">
       <source src="baraka.mp3" type="audio/mp3" />
     </audio>
     <!-- =======================================================
@@ -1687,6 +1687,15 @@
               overlay.style.display = "none";
             }, 1000);
 
+            /* Audio goes first, and video (muted, so it autoplays
+               regardless of gesture) goes second — mobile Safari can
+               spend the tap's user-activation on whichever media
+               element asks first, so the one that actually needs
+               permission (audio) must not be left to go second. */
+            audio.volume = 1;
+            audio.loop = true;
+            var audioAttempt = audio.play();
+
             videoShell.classList.add("is-visible");
             var playAttempt = introVideo.play();
             if (playAttempt && typeof playAttempt.catch === "function") {
@@ -1695,9 +1704,6 @@
               });
             }
 
-            audio.volume = 1;
-            audio.loop = true;
-            var audioAttempt = audio.play();
             if (audioAttempt && typeof audioAttempt.catch === "function") {
               audioAttempt.catch(function () {
                 audioToggle.classList.add("is-paused");
