@@ -1751,12 +1751,134 @@
           var introStarted = false;
           var videoFading = false;
 
+          /* =====================================================
+         TEMPORARY DEBUG INSTRUMENTATION — remove once the
+         intermittent black-screen cause is confirmed.
+         Activate on a phone by loading the page with ?debug=1
+         ===================================================== */
+          var debugOn = /(^|[?&])debug=1(&|$)/.test(location.search);
+          var debugOverlay = null;
+          function debugLog(msg) {
+            if (!debugOn) return;
+            if (!debugOverlay) {
+              debugOverlay = document.createElement("div");
+              debugOverlay.id = "introDebugOverlay";
+              debugOverlay.style.cssText =
+                "position:fixed;top:0;left:0;right:0;max-height:50vh;" +
+                "overflow-y:auto;z-index:2147483647;background:rgba(0,0,0,0.9);" +
+                "color:#0f0;font:11px/1.4 monospace;padding:8px;white-space:pre-wrap;" +
+                "pointer-events:auto;";
+              document.body.appendChild(debugOverlay);
+            }
+            var t = (performance.now() / 1000).toFixed(2);
+            var line = document.createElement("div");
+            line.textContent = "[" + t + "s] " + msg;
+            debugOverlay.appendChild(line);
+            debugOverlay.scrollTop = debugOverlay.scrollHeight;
+            console.log("[introDebug " + t + "s]", msg);
+          }
+          function logResourceTiming(fileName) {
+            if (!debugOn || !window.performance || !performance.getEntriesByType)
+              return;
+            var match = performance
+              .getEntriesByType("resource")
+              .filter(function (e) {
+                return e.name.indexOf(fileName) !== -1;
+              })
+              .pop();
+            if (match) {
+              debugLog(
+                "resource[" +
+                  fileName +
+                  "]: transferSize=" +
+                  match.transferSize +
+                  "B duration=" +
+                  match.duration.toFixed(0) +
+                  "ms ttfb=" +
+                  (match.responseStart - match.requestStart).toFixed(0) +
+                  "ms",
+              );
+            }
+          }
+          if (debugOn) {
+            debugLog("debug overlay active, ua=" + navigator.userAgent);
+            if (navigator.connection) {
+              debugLog(
+                "connection: effectiveType=" +
+                  navigator.connection.effectiveType +
+                  " downlink=" +
+                  navigator.connection.downlink +
+                  "Mbps rtt=" +
+                  navigator.connection.rtt +
+                  "ms saveData=" +
+                  navigator.connection.saveData,
+              );
+            } else {
+              debugLog("navigator.connection not available");
+            }
+            [
+              "loadstart",
+              "loadedmetadata",
+              "durationchange",
+              "loadeddata",
+              "canplay",
+              "canplaythrough",
+              "playing",
+              "waiting",
+              "stalled",
+              "suspend",
+              "abort",
+              "emptied",
+              "error",
+              "ended",
+              "play",
+              "pause",
+            ].forEach(function (evt) {
+              introVideo.addEventListener(evt, function () {
+                debugLog(
+                  "introVideo event: " +
+                    evt +
+                    " | readyState=" +
+                    introVideo.readyState +
+                    " networkState=" +
+                    introVideo.networkState +
+                    " duration=" +
+                    introVideo.duration +
+                    " currentTime=" +
+                    introVideo.currentTime.toFixed(2) +
+                    (introVideo.error
+                      ? " errorCode=" + introVideo.error.code
+                      : ""),
+                );
+                if (evt === "loadeddata" || evt === "canplaythrough" || evt === "error") {
+                  logResourceTiming("openning_envelop.mp4");
+                }
+              });
+            });
+            var lastTU = 0;
+            introVideo.addEventListener("timeupdate", function () {
+              var now = performance.now();
+              if (now - lastTU < 500) return;
+              lastTU = now;
+              debugLog(
+                "timeupdate: currentTime=" +
+                  introVideo.currentTime.toFixed(2) +
+                  " duration=" +
+                  introVideo.duration,
+              );
+            });
+          }
+
           function showAudioButton() {
             audioToggle.classList.add("is-visible");
           }
 
-          function endIntro() {
-            if (videoFading) return;
+          function endIntro(reason) {
+            if (videoFading) {
+              debugLog("endIntro() ignored (already fading), reason=" + reason);
+              return;
+            }
+            debugLog("endIntro() firing, reason=" + reason);
             videoFading = true;
             videoShell.classList.remove("is-visible");
             setTimeout(function () {
@@ -1787,10 +1909,33 @@
             armAudioRetry();
 
             videoShell.classList.add("is-visible");
+            debugLog(
+              "startIntro: gesture=" +
+                (event ? event.type : "n/a") +
+                " | video readyState=" +
+                introVideo.readyState +
+                " networkState=" +
+                introVideo.networkState,
+            );
             var playAttempt = introVideo.play();
+            debugLog(
+              "introVideo.play() called, returned " +
+                (playAttempt ? "a promise" : "undefined (old browser API)"),
+            );
+            if (playAttempt && typeof playAttempt.then === "function") {
+              playAttempt.then(function () {
+                debugLog("introVideo.play() promise RESOLVED");
+              });
+            }
             if (playAttempt && typeof playAttempt.catch === "function") {
-              playAttempt.catch(function () {
-                endIntro();
+              playAttempt.catch(function (err) {
+                debugLog(
+                  "introVideo.play() promise REJECTED: " +
+                    (err && err.name) +
+                    " - " +
+                    (err && err.message),
+                );
+                endIntro("play-rejected");
               });
             }
 
@@ -1848,15 +1993,33 @@
           });
 
           introVideo.addEventListener("timeupdate", function () {
-            if (!introVideo.duration) return;
+            if (!introVideo.duration) {
+              debugLog(
+                "timeupdate: duration guard blocked endIntro, duration=" +
+                  introVideo.duration,
+              );
+              return;
+            }
             if (introVideo.duration - introVideo.currentTime < 0.8) {
-              endIntro();
+              endIntro("timeupdate-near-end");
             }
           });
-          introVideo.addEventListener("ended", endIntro);
-          introVideo.addEventListener("error", endIntro);
+          introVideo.addEventListener("ended", function () {
+            endIntro("ended-event");
+          });
+          introVideo.addEventListener("error", function () {
+            debugLog(
+              "introVideo error event, code=" +
+                (introVideo.error && introVideo.error.code),
+            );
+            endIntro("video-error");
+          });
           var introSource = introVideo.querySelector("source");
-          if (introSource) introSource.addEventListener("error", endIntro);
+          if (introSource)
+            introSource.addEventListener("error", function () {
+              debugLog("introVideo <source> error event");
+              endIntro("source-error");
+            });
 
           /* =====================================================
          JS BLOCK 2 — FLOATING AUDIO CONTROL
