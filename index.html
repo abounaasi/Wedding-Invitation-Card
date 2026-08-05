@@ -190,6 +190,37 @@
         object-fit: contain;
       }
 
+      /* Wraps the envelope art so the wax seal can be pinned to it
+         precisely, at whatever size the envelope itself renders at. */
+      .envelope-stage {
+        position: relative;
+        display: inline-block;
+      }
+
+      /* Seal photo's own background isn't transparent, so it's masked to
+         its wax-blob silhouette (same feathered-edge approach used for
+         the other floral art) rather than showing a hard rectangle. */
+      .envelope-seal {
+        position: absolute;
+        top: 51%;
+        left: 50%;
+        width: 42%;
+        height: auto;
+        transform: translate(-50%, -50%);
+        -webkit-mask-image: radial-gradient(
+          ellipse 42% 50% at 50% 48%,
+          #000 78%,
+          transparent 96%
+        );
+        mask-image: radial-gradient(
+          ellipse 42% 50% at 50% 48%,
+          #000 78%,
+          transparent 96%
+        );
+        pointer-events: none;
+        user-select: none;
+      }
+
       .tap-prompt {
         position: absolute;
         bottom: 22%;
@@ -1234,12 +1265,15 @@
       tabindex="0"
       aria-label="Open the wedding invitation"
     >
-      <img
-        class="envelope-image"
-        src="https://pub-96ce671efbac4dbfbc89b044c631a913.r2.dev/ChatGPT Image Jun 23%2C 2026%2C 04_40_29 PM.png"
-        alt="Wedding invitation envelope"
-        decoding="async"
-      />
+      <div class="envelope-stage">
+        <img
+          class="envelope-image"
+          src="https://pub-96ce671efbac4dbfbc89b044c631a913.r2.dev/ChatGPT Image Jun 23%2C 2026%2C 04_40_29 PM.png"
+          alt="Wedding invitation envelope"
+          decoding="async"
+        />
+        <img class="envelope-seal" src="j%26j.png" alt="" aria-hidden="true" />
+      </div>
       <div class="tap-prompt" aria-hidden="true">
         <span class="tap-chevron"></span>
         <span class="tap-label">Tap to open</span>
@@ -1258,10 +1292,7 @@
         webkit-playsinline
         preload="auto"
       >
-        <source
-          src="https://pub-96ce671efbac4dbfbc89b044c631a913.r2.dev/1782224012851.mp4"
-          type="video/mp4"
-        />
+        <source src="openning_envelop.mp4" type="video/mp4" />
       </video>
     </div>
 
