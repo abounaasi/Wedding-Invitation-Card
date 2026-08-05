@@ -190,37 +190,6 @@
         object-fit: contain;
       }
 
-      /* Wraps the envelope art so the wax seal can be pinned to it
-         precisely, at whatever size the envelope itself renders at. */
-      .envelope-stage {
-        position: relative;
-        display: inline-block;
-      }
-
-      /* Seal photo's own background isn't transparent, so it's masked to
-         its wax-blob silhouette (same feathered-edge approach used for
-         the other floral art) rather than showing a hard rectangle. */
-      .envelope-seal {
-        position: absolute;
-        top: 51%;
-        left: 50%;
-        width: 42%;
-        height: auto;
-        transform: translate(-50%, -50%);
-        -webkit-mask-image: radial-gradient(
-          ellipse 42% 50% at 50% 48%,
-          #000 78%,
-          transparent 96%
-        );
-        mask-image: radial-gradient(
-          ellipse 42% 50% at 50% 48%,
-          #000 78%,
-          transparent 96%
-        );
-        pointer-events: none;
-        user-select: none;
-      }
-
       .tap-prompt {
         position: absolute;
         bottom: 22%;
@@ -475,17 +444,25 @@
         line-height: 1.2;
       }
 
+      /* Anchored to the stage itself (not the copy block) so it sits
+         below the swans at the foot of the arch, clear of the torn
+         paper edge, regardless of how tall the names above render. */
       .scroll-cue {
+        position: absolute;
+        left: 50%;
+        bottom: calc(var(--hero-tear-h) + clamp(14px, 3.4vh, 30px));
+        z-index: 2;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 0;
-        margin-top: clamp(10px, 2.6vh, 32px);
+        transform: translateX(-50%);
         color: var(--gold);
         font-family: var(--script);
         font-size: clamp(24px, 6.2vw, 34px);
         line-height: 1.25;
         text-shadow: 0 2px 12px rgba(253, 247, 238, 0.7);
+        pointer-events: none;
       }
 
       .scroll-chevron {
@@ -1265,15 +1242,12 @@
       tabindex="0"
       aria-label="Open the wedding invitation"
     >
-      <div class="envelope-stage">
-        <img
-          class="envelope-image"
-          src="https://pub-96ce671efbac4dbfbc89b044c631a913.r2.dev/ChatGPT Image Jun 23%2C 2026%2C 04_40_29 PM.png"
-          alt="Wedding invitation envelope"
-          decoding="async"
-        />
-        <img class="envelope-seal" src="j%26j.png" alt="" aria-hidden="true" />
-      </div>
+      <img
+        class="envelope-image"
+        src="envelope_image.png"
+        alt="Wedding invitation envelope"
+        decoding="async"
+      />
       <div class="tap-prompt" aria-hidden="true">
         <span class="tap-chevron"></span>
         <span class="tap-label">Tap to open</span>
@@ -1299,13 +1273,15 @@
     <!-- =======================================================
        4) BACKGROUND AUDIO
        ======================================================= -->
-    <audio id="weiAudio" loop>
+    <!--<audio id="weiAudio" loop>
       <source
         src="https://pub-4dc8201144ca418fb604349c73e8c724.r2.dev/Einaudi_ Divenire (1) (1).mp3"
         type="audio/mp3"
       />
+    </audio>-->
+    <audio id="weiAudio" loop>
+      <source src="baraka.mp3" type="audio/mp3" />
     </audio>
-
     <!-- =======================================================
        7) FLOATING AUDIO CONTROL BUTTON
        ======================================================= -->
@@ -1359,19 +1335,19 @@
               <span class="ampersand">&amp;</span>
               <span>Jana</span>
             </h1>
+          </div>
 
-            <div class="scroll-cue" aria-hidden="true">
-              <span>Scroll down</span>
-              <svg class="scroll-chevron" viewBox="0 0 25 15.86">
-                <path
-                  fill="none"
-                  stroke="#a67d2b"
-                  stroke-width="1"
-                  stroke-linecap="round"
-                  d="M1.0092 1.008C4.3691 5.4431 9.1402 9.565 12.5 14C16.8007 9.565 19.6901 5.4431 23.9908 1.008"
-                />
-              </svg>
-            </div>
+          <div class="scroll-cue" aria-hidden="true">
+            <span>Scroll down</span>
+            <svg class="scroll-chevron" viewBox="0 0 25 15.86">
+              <path
+                fill="none"
+                stroke="#a67d2b"
+                stroke-width="1"
+                stroke-linecap="round"
+                d="M1.0092 1.008C4.3691 5.4431 9.1402 9.565 12.5 14C16.8007 9.565 19.6901 5.4431 23.9908 1.008"
+              />
+            </svg>
           </div>
 
           <div class="hero-tear" aria-hidden="true"></div>
