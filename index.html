@@ -1784,6 +1784,7 @@
             audio.volume = 1;
             audio.loop = true;
             var audioAttempt = audio.play();
+            armAudioRetry();
 
             videoShell.classList.add("is-visible");
             var playAttempt = introVideo.play();
@@ -1797,38 +1798,41 @@
               audioAttempt.catch(function () {
                 audioToggle.classList.add("is-paused");
                 audioToggle.setAttribute("aria-label", "Play background music");
-                retryAudioOnNextInteraction();
               });
             }
           }
 
           /* Some in-app browsers (WhatsApp/Instagram/Messenger's built-in
-             WebView) block the very first play() even inside a real tap
-             handler. Rather than leave guests to find the small resume
-             button, silently retry on whatever they touch next — a
-             scroll, a tap anywhere — so audio starts on its own almost
-             immediately without them realizing it was ever blocked. */
+             WebView) let the very first play() resolve — audio.paused
+             is false, currentTime advances — but keep actual output
+             suppressed until a SECOND gesture-linked play() call, same
+             as a manual "tap resume" fixes it. Since play() reporting
+             success doesn't mean it's actually audible there, this
+             re-issues play() on whatever the guest touches next
+             (scroll, tap, anything) regardless of how the first call
+             reported, replicating that second tap automatically. */
           var retryBound = false;
-          function retryAudioOnNextInteraction() {
+          function armAudioRetry() {
             if (retryBound) return;
             retryBound = true;
             var retryEvents = ["touchstart", "pointerdown", "click", "scroll"];
-            function tryResume() {
+            function retryOnce() {
+              retryEvents.forEach(function (evt) {
+                document.removeEventListener(evt, retryOnce, true);
+              });
               audio
                 .play()
                 .then(function () {
                   audioToggle.classList.remove("is-paused");
                   audioToggle.setAttribute("aria-label", "Pause background music");
-                  retryEvents.forEach(function (evt) {
-                    document.removeEventListener(evt, tryResume);
-                  });
                 })
                 .catch(function () {
-                  /* still blocked — stay bound and try again next time */
+                  audioToggle.classList.add("is-paused");
+                  audioToggle.setAttribute("aria-label", "Play background music");
                 });
             }
             retryEvents.forEach(function (evt) {
-              document.addEventListener(evt, tryResume, {
+              document.addEventListener(evt, retryOnce, {
                 passive: true,
                 capture: true,
               });
