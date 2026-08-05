@@ -1358,7 +1358,7 @@
         type="audio/mp3"
       />
     </audio>-->
-    <audio id="weiAudio" loop preload="auto">
+    <audio id="weiAudio" loop preload="none">
       <source src="baraka.mp3" type="audio/mp3" />
     </audio>
     <!-- =======================================================
@@ -1389,12 +1389,11 @@
             id="heroVideo"
             class="hero-video"
             poster="swans-poster.jpg"
-            autoplay
             muted
             loop
             playsinline
             webkit-playsinline
-            preload="auto"
+            preload="metadata"
           >
             <!-- H.264 first: decodes everywhere and is ~5x lighter -->
             <source src="swans.mp4" type="video/mp4" />
@@ -1443,12 +1442,14 @@
             src="https://static.tildacdn.net/tild6639-3363-4136-a234-356639363561/noroot.png"
             alt=""
             aria-hidden="true"
+            loading="lazy"
           />
           <img
             class="verse-flower right reveal"
             src="https://static.tildacdn.net/tild3764-3461-4436-a562-636534643333/noroot.png"
             alt=""
             aria-hidden="true"
+            loading="lazy"
           />
 
           <!-- Delicate trailing stems cropped out of the two bouquets
@@ -1457,24 +1458,28 @@
             <img
               src="https://static.tildacdn.net/tild6639-3363-4136-a234-356639363561/noroot.png"
               alt=""
+              loading="lazy"
             />
           </span>
           <span class="verse-vine vine-b reveal-soft" aria-hidden="true">
             <img
               src="https://static.tildacdn.net/tild3764-3461-4436-a562-636534643333/noroot.png"
               alt=""
+              loading="lazy"
             />
           </span>
           <span class="verse-vine vine-c reveal-soft" aria-hidden="true">
             <img
               src="https://static.tildacdn.net/tild3764-3461-4436-a562-636534643333/noroot.png"
               alt=""
+              loading="lazy"
             />
           </span>
           <span class="verse-vine vine-d reveal-soft" aria-hidden="true">
             <img
               src="https://static.tildacdn.net/tild3764-3461-4436-a562-636534643333/noroot.png"
               alt=""
+              loading="lazy"
             />
           </span>
 
@@ -1670,6 +1675,7 @@
               <img
                 src="map-preview.png"
                 alt="Tap to open venue location in Google Maps"
+                loading="lazy"
               />
             </a>
           </div>
@@ -1694,11 +1700,13 @@
         src="https://static.tildacdn.net/tild3732-6364-4131-b837-353363666335/623915249_2629494717.png"
         alt=""
         aria-hidden="true"
+        loading="lazy"
       />
       <img
         class="footer-heart-wreath reveal-soft"
         src="Upscale%20Image%20to%20High%20Quality.png"
         alt="Jalal &amp; Jana"
+        loading="lazy"
       />
     </footer>
     <p style="text-align: center">
@@ -1760,6 +1768,7 @@
           var overlay = document.getElementById("envelopeOverlay");
           var videoShell = document.getElementById("introVideoShell");
           var introVideo = document.getElementById("introVideo");
+          var heroVideo = document.getElementById("heroVideo");
           var audio = document.getElementById("weiAudio");
           var audioToggle = document.getElementById("audioToggle");
           var introStarted = false;
@@ -1821,6 +1830,16 @@
               playAttempt.catch(function () {
                 endIntro();
               });
+            }
+
+            /* Hero video has no autoplay attribute — it had nothing to
+               show until now anyway (hidden behind the envelope, then
+               the opaque intro shell). Starting it here, muted, lets
+               it buffer/play in the background so it's already
+               running smoothly by the time the shell fades away. */
+            var heroPlayAttempt = heroVideo.play();
+            if (heroPlayAttempt && typeof heroPlayAttempt.catch === "function") {
+              heroPlayAttempt.catch(function () {});
             }
 
             if (audioAttempt && typeof audioAttempt.catch === "function") {
