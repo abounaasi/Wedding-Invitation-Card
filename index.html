@@ -11,13 +11,27 @@
     <!-- ═══════════════ 3) PAGE TITLE ═══════════════ -->
     <title>JALAL&amp;JANA</title>
 
-    <!-- ═══════════════ 2) TYPOGRAPHY — Google Fonts ═══════════════ -->
+    <!-- ═══════════════ 2) TYPOGRAPHY — Google Fonts ═══════════════
+       Loaded non-render-blocking: rel=preload fetches the CSS in
+       parallel with everything else, then the onload swap activates
+       it. On a slow connection this is the difference between an
+       instant first paint (fallback fonts, swapped in moments later)
+       and a blank/black screen while the browser waits on a
+       render-blocking request to a third-party origin. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Great+Vibes&family=Ovo&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Great+Vibes&family=Ovo&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
 
     <style>
       /* =========================================================
@@ -1329,7 +1343,7 @@
         muted
         playsinline
         webkit-playsinline
-        preload="auto"
+        preload="metadata"
       >
         <source src="openning_envelop.mp4" type="video/mp4" />
       </video>
@@ -1751,134 +1765,27 @@
           var introStarted = false;
           var videoFading = false;
 
-          /* =====================================================
-         TEMPORARY DEBUG INSTRUMENTATION — remove once the
-         intermittent black-screen cause is confirmed.
-         Activate on a phone by loading the page with ?debug=1
-         ===================================================== */
-          var debugOn = /(^|[?&])debug=1(&|$)/.test(location.search);
-          var debugOverlay = null;
-          function debugLog(msg) {
-            if (!debugOn) return;
-            if (!debugOverlay) {
-              debugOverlay = document.createElement("div");
-              debugOverlay.id = "introDebugOverlay";
-              debugOverlay.style.cssText =
-                "position:fixed;top:0;left:0;right:0;max-height:50vh;" +
-                "overflow-y:auto;z-index:2147483647;background:rgba(0,0,0,0.9);" +
-                "color:#0f0;font:11px/1.4 monospace;padding:8px;white-space:pre-wrap;" +
-                "pointer-events:auto;";
-              document.body.appendChild(debugOverlay);
-            }
-            var t = (performance.now() / 1000).toFixed(2);
-            var line = document.createElement("div");
-            line.textContent = "[" + t + "s] " + msg;
-            debugOverlay.appendChild(line);
-            debugOverlay.scrollTop = debugOverlay.scrollHeight;
-            console.log("[introDebug " + t + "s]", msg);
+          /* The intro video only needs its metadata up front (see the
+             preload="metadata" attribute) so it doesn't compete with
+             the page's own render on a slow connection. Once the
+             browser is idle, switch it to full preload so the file is
+             buffered and ready by the time the guest actually taps. */
+          function primeIntroVideo() {
+            introVideo.preload = "auto";
+            introVideo.load();
           }
-          function logResourceTiming(fileName) {
-            if (!debugOn || !window.performance || !performance.getEntriesByType)
-              return;
-            var match = performance
-              .getEntriesByType("resource")
-              .filter(function (e) {
-                return e.name.indexOf(fileName) !== -1;
-              })
-              .pop();
-            if (match) {
-              debugLog(
-                "resource[" +
-                  fileName +
-                  "]: transferSize=" +
-                  match.transferSize +
-                  "B duration=" +
-                  match.duration.toFixed(0) +
-                  "ms ttfb=" +
-                  (match.responseStart - match.requestStart).toFixed(0) +
-                  "ms",
-              );
-            }
-          }
-          if (debugOn) {
-            debugLog("debug overlay active, ua=" + navigator.userAgent);
-            if (navigator.connection) {
-              debugLog(
-                "connection: effectiveType=" +
-                  navigator.connection.effectiveType +
-                  " downlink=" +
-                  navigator.connection.downlink +
-                  "Mbps rtt=" +
-                  navigator.connection.rtt +
-                  "ms saveData=" +
-                  navigator.connection.saveData,
-              );
-            } else {
-              debugLog("navigator.connection not available");
-            }
-            [
-              "loadstart",
-              "loadedmetadata",
-              "durationchange",
-              "loadeddata",
-              "canplay",
-              "canplaythrough",
-              "playing",
-              "waiting",
-              "stalled",
-              "suspend",
-              "abort",
-              "emptied",
-              "error",
-              "ended",
-              "play",
-              "pause",
-            ].forEach(function (evt) {
-              introVideo.addEventListener(evt, function () {
-                debugLog(
-                  "introVideo event: " +
-                    evt +
-                    " | readyState=" +
-                    introVideo.readyState +
-                    " networkState=" +
-                    introVideo.networkState +
-                    " duration=" +
-                    introVideo.duration +
-                    " currentTime=" +
-                    introVideo.currentTime.toFixed(2) +
-                    (introVideo.error
-                      ? " errorCode=" + introVideo.error.code
-                      : ""),
-                );
-                if (evt === "loadeddata" || evt === "canplaythrough" || evt === "error") {
-                  logResourceTiming("openning_envelop.mp4");
-                }
-              });
-            });
-            var lastTU = 0;
-            introVideo.addEventListener("timeupdate", function () {
-              var now = performance.now();
-              if (now - lastTU < 500) return;
-              lastTU = now;
-              debugLog(
-                "timeupdate: currentTime=" +
-                  introVideo.currentTime.toFixed(2) +
-                  " duration=" +
-                  introVideo.duration,
-              );
-            });
+          if ("requestIdleCallback" in window) {
+            requestIdleCallback(primeIntroVideo, { timeout: 2000 });
+          } else {
+            setTimeout(primeIntroVideo, 300);
           }
 
           function showAudioButton() {
             audioToggle.classList.add("is-visible");
           }
 
-          function endIntro(reason) {
-            if (videoFading) {
-              debugLog("endIntro() ignored (already fading), reason=" + reason);
-              return;
-            }
-            debugLog("endIntro() firing, reason=" + reason);
+          function endIntro() {
+            if (videoFading) return;
             videoFading = true;
             videoShell.classList.remove("is-visible");
             setTimeout(function () {
@@ -1909,33 +1816,10 @@
             armAudioRetry();
 
             videoShell.classList.add("is-visible");
-            debugLog(
-              "startIntro: gesture=" +
-                (event ? event.type : "n/a") +
-                " | video readyState=" +
-                introVideo.readyState +
-                " networkState=" +
-                introVideo.networkState,
-            );
             var playAttempt = introVideo.play();
-            debugLog(
-              "introVideo.play() called, returned " +
-                (playAttempt ? "a promise" : "undefined (old browser API)"),
-            );
-            if (playAttempt && typeof playAttempt.then === "function") {
-              playAttempt.then(function () {
-                debugLog("introVideo.play() promise RESOLVED");
-              });
-            }
             if (playAttempt && typeof playAttempt.catch === "function") {
-              playAttempt.catch(function (err) {
-                debugLog(
-                  "introVideo.play() promise REJECTED: " +
-                    (err && err.name) +
-                    " - " +
-                    (err && err.message),
-                );
-                endIntro("play-rejected");
+              playAttempt.catch(function () {
+                endIntro();
               });
             }
 
@@ -1993,33 +1877,15 @@
           });
 
           introVideo.addEventListener("timeupdate", function () {
-            if (!introVideo.duration) {
-              debugLog(
-                "timeupdate: duration guard blocked endIntro, duration=" +
-                  introVideo.duration,
-              );
-              return;
-            }
+            if (!introVideo.duration) return;
             if (introVideo.duration - introVideo.currentTime < 0.8) {
-              endIntro("timeupdate-near-end");
+              endIntro();
             }
           });
-          introVideo.addEventListener("ended", function () {
-            endIntro("ended-event");
-          });
-          introVideo.addEventListener("error", function () {
-            debugLog(
-              "introVideo error event, code=" +
-                (introVideo.error && introVideo.error.code),
-            );
-            endIntro("video-error");
-          });
+          introVideo.addEventListener("ended", endIntro);
+          introVideo.addEventListener("error", endIntro);
           var introSource = introVideo.querySelector("source");
-          if (introSource)
-            introSource.addEventListener("error", function () {
-              debugLog("introVideo <source> error event");
-              endIntro("source-error");
-            });
+          if (introSource) introSource.addEventListener("error", endIntro);
 
           /* =====================================================
          JS BLOCK 2 — FLOATING AUDIO CONTROL
