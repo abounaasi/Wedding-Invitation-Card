@@ -1708,154 +1708,152 @@
     </footer>
     <p style="text-align: center">
       Designed with love by <br /><b>Ahmad Abounaasi &#9825;</b>
+    </p>
 
-      <noscript>
-        <style>
-          .envelope-overlay,
-          .intro-video-shell {
-            display: none !important;
-          }
-          .reveal {
-            opacity: 1 !important;
-            transform: none !important;
-          }
-          .reveal-soft {
-            opacity: 1 !important;
-          }
-          body.intro-active {
-            overflow: auto !important;
-          }
-          .audio-toggle {
-            display: none !important;
-          }
-        </style>
-      </noscript>
+    <noscript>
+      <style>
+        .envelope-overlay,
+        .intro-video-shell {
+          display: none !important;
+        }
+        .reveal {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+        .reveal-soft {
+          opacity: 1 !important;
+        }
+        body.intro-active {
+          overflow: auto !important;
+        }
+        .audio-toggle {
+          display: none !important;
+        }
+      </style>
+    </noscript>
 
-      <script>
-        (function () {
-          "use strict";
+    <script>
+      (function () {
+        "use strict";
 
-          /* =====================================================
+        /* =====================================================
          JS BLOCK 0 — IN-APP BROWSER NOTICE
          WhatsApp/Instagram/Messenger/etc. mute audio at the WebView
          level regardless of what the page does, so just point guests
          to their real browser instead of chasing an unfixable bug.
          ===================================================== */
-          (function () {
-            var ua = navigator.userAgent || "";
-            var isInApp =
-              /FBAN|FBAV|Instagram|Line\/|WhatsApp|Twitter|TikTok|musical_ly|Snapchat|MicroMessenger/i.test(
-                ua,
-              );
-            if (!isInApp) return;
-            var banner = document.getElementById("inAppBrowserBanner");
-            if (!banner) return;
-            banner.hidden = false;
-            var closeBtn = banner.querySelector(".in-app-banner-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", function () {
-                banner.hidden = true;
-              });
-            }
-          })();
+        (function () {
+          var ua = navigator.userAgent || "";
+          var isInApp =
+            /FBAN|FBAV|Instagram|Line\/|WhatsApp|Twitter|TikTok|musical_ly|Snapchat|MicroMessenger/i.test(
+              ua,
+            );
+          if (!isInApp) return;
+          var banner = document.getElementById("inAppBrowserBanner");
+          if (!banner) return;
+          banner.hidden = false;
+          var closeBtn = banner.querySelector(".in-app-banner-close");
+          if (closeBtn) {
+            closeBtn.addEventListener("click", function () {
+              banner.hidden = true;
+            });
+          }
+        })();
 
-          /* =====================================================
+        /* =====================================================
          JS BLOCK 1 — INTRO SEQUENCE
          ===================================================== */
-          var overlay = document.getElementById("envelopeOverlay");
-          var videoShell = document.getElementById("introVideoShell");
-          var introVideo = document.getElementById("introVideo");
-          var heroVideo = document.getElementById("heroVideo");
-          var audio = document.getElementById("weiAudio");
-          var audioToggle = document.getElementById("audioToggle");
-          var introStarted = false;
-          var videoFading = false;
+        var overlay = document.getElementById("envelopeOverlay");
+        var videoShell = document.getElementById("introVideoShell");
+        var introVideo = document.getElementById("introVideo");
+        var heroVideo = document.getElementById("heroVideo");
+        var audio = document.getElementById("weiAudio");
+        var audioToggle = document.getElementById("audioToggle");
+        var introStarted = false;
+        var videoFading = false;
 
-          function showAudioButton() {
-            audioToggle.classList.add("is-visible");
-          }
+        function showAudioButton() {
+          audioToggle.classList.add("is-visible");
+        }
 
-          function revealIntroShell() {
-            videoShell.classList.add("is-visible");
-          }
+        function revealIntroShell() {
+          videoShell.classList.add("is-visible");
+        }
 
-          /* Hero video only starts once the intro video has finished (or
+        /* Hero video only starts once the intro video has finished (or
              is about to), so the two never compete for bandwidth/decoding
              at the same time. It has no autoplay attribute for the same
              reason — nothing to show until now anyway. */
-          function startHeroVideo() {
-            var heroPlayAttempt = heroVideo.play();
-            if (
-              heroPlayAttempt &&
-              typeof heroPlayAttempt.catch === "function"
-            ) {
-              heroPlayAttempt.catch(function () {});
-            }
+        function startHeroVideo() {
+          var heroPlayAttempt = heroVideo.play();
+          if (heroPlayAttempt && typeof heroPlayAttempt.catch === "function") {
+            heroPlayAttempt.catch(function () {});
           }
+        }
 
-          function endIntro() {
-            if (videoFading) return;
-            videoFading = true;
-            videoShell.classList.remove("is-visible");
-            startHeroVideo();
-            setTimeout(function () {
-              videoShell.style.display = "none";
-              document.body.classList.remove("intro-active");
-              showAudioButton();
-            }, 1000);
-          }
+        function endIntro() {
+          if (videoFading) return;
+          videoFading = true;
+          videoShell.classList.remove("is-visible");
+          startHeroVideo();
+          setTimeout(function () {
+            videoShell.style.display = "none";
+            document.body.classList.remove("intro-active");
+            showAudioButton();
+          }, 1000);
+        }
 
-          function startIntro(event) {
-            if (introStarted) return;
-            introStarted = true;
-            if (event && event.type === "touchstart") event.preventDefault();
+        function startIntro(event) {
+          if (introStarted) return;
+          introStarted = true;
+          if (event && event.type === "touchstart") event.preventDefault();
 
-            overlay.classList.add("is-leaving");
-            setTimeout(function () {
-              overlay.style.display = "none";
-            }, 1000);
+          overlay.classList.add("is-leaving");
+          setTimeout(function () {
+            overlay.style.display = "none";
+          }, 1000);
 
-            /* Audio goes first, and video (muted, so it autoplays
+          /* Audio goes first, and video (muted, so it autoplays
                regardless of gesture) goes second — mobile Safari can
                spend the tap's user-activation on whichever media
                element asks first, so the one that actually needs
                permission (audio) must not be left to go second. */
-            audio.volume = 1;
-            audio.loop = true;
-            var audioAttempt = audio.play();
-            armAudioRetry();
+          audio.volume = 1;
+          audio.loop = true;
+          var audioAttempt = audio.play();
+          armAudioRetry();
 
-            var playAttempt = introVideo.play();
-            if (playAttempt && typeof playAttempt.catch === "function") {
-              playAttempt.catch(function () {
-                endIntro();
-              });
-            }
+          var playAttempt = introVideo.play();
+          if (playAttempt && typeof playAttempt.catch === "function") {
+            playAttempt.catch(function () {
+              endIntro();
+            });
+          }
 
-            /* Don't reveal the intro shell until the video actually has a
+          /* Don't reveal the intro shell until the video actually has a
                frame ready (readyState >= 2 = HAVE_CURRENT_DATA). The poster
                is already on screen underneath, so there's no black flash
                either way — this just avoids swapping to the video element
                before it has anything to paint. A short safety timeout
                covers the rare case where readiness never fires. */
-            if (introVideo.readyState >= 2) {
-              revealIntroShell();
-            } else {
-              introVideo.addEventListener("loadeddata", revealIntroShell, {
-                once: true,
-              });
-              setTimeout(revealIntroShell, 2500);
-            }
-
-            if (audioAttempt && typeof audioAttempt.catch === "function") {
-              audioAttempt.catch(function () {
-                audioToggle.classList.add("is-paused");
-                audioToggle.setAttribute("aria-label", "Play background music");
-              });
-            }
+          if (introVideo.readyState >= 2) {
+            revealIntroShell();
+          } else {
+            introVideo.addEventListener("loadeddata", revealIntroShell, {
+              once: true,
+            });
+            setTimeout(revealIntroShell, 2500);
           }
 
-          /* Some in-app browsers (WhatsApp/Instagram/Messenger's built-in
+          if (audioAttempt && typeof audioAttempt.catch === "function") {
+            audioAttempt.catch(function () {
+              audioToggle.classList.add("is-paused");
+              audioToggle.setAttribute("aria-label", "Play background music");
+            });
+          }
+        }
+
+        /* Some in-app browsers (WhatsApp/Instagram/Messenger's built-in
              WebView) let the very first play() resolve — audio.paused
              is false, currentTime advances — but keep actual output
              suppressed until a SECOND gesture-linked play() call, same
@@ -1864,138 +1862,134 @@
              re-issues play() on whatever the guest touches next
              (scroll, tap, anything) regardless of how the first call
              reported, replicating that second tap automatically. */
-          var retryBound = false;
-          function armAudioRetry() {
-            if (retryBound) return;
-            retryBound = true;
-            var retryEvents = ["touchstart", "pointerdown", "click", "scroll"];
-            function retryOnce() {
-              retryEvents.forEach(function (evt) {
-                document.removeEventListener(evt, retryOnce, true);
-              });
-              audio
-                .play()
-                .then(function () {
-                  audioToggle.classList.remove("is-paused");
-                  audioToggle.setAttribute(
-                    "aria-label",
-                    "Pause background music",
-                  );
-                })
-                .catch(function () {
-                  audioToggle.classList.add("is-paused");
-                  audioToggle.setAttribute(
-                    "aria-label",
-                    "Play background music",
-                  );
-                });
-            }
+        var retryBound = false;
+        function armAudioRetry() {
+          if (retryBound) return;
+          retryBound = true;
+          var retryEvents = ["touchstart", "pointerdown", "click", "scroll"];
+          function retryOnce() {
             retryEvents.forEach(function (evt) {
-              document.addEventListener(evt, retryOnce, {
-                passive: true,
-                capture: true,
-              });
+              document.removeEventListener(evt, retryOnce, true);
             });
+            audio
+              .play()
+              .then(function () {
+                audioToggle.classList.remove("is-paused");
+                audioToggle.setAttribute(
+                  "aria-label",
+                  "Pause background music",
+                );
+              })
+              .catch(function () {
+                audioToggle.classList.add("is-paused");
+                audioToggle.setAttribute("aria-label", "Play background music");
+              });
           }
-
-          overlay.addEventListener("click", startIntro);
-          overlay.addEventListener("touchstart", startIntro, {
-            passive: false,
+          retryEvents.forEach(function (evt) {
+            document.addEventListener(evt, retryOnce, {
+              passive: true,
+              capture: true,
+            });
           });
-          overlay.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" || e.key === " ") startIntro(e);
-          });
+        }
 
-          introVideo.addEventListener("timeupdate", function () {
-            if (!introVideo.duration) return;
-            if (introVideo.duration - introVideo.currentTime < 0.8) {
-              endIntro();
-            }
-          });
-          introVideo.addEventListener("ended", endIntro);
-          introVideo.addEventListener("error", endIntro);
-          var introSource = introVideo.querySelector("source");
-          if (introSource) introSource.addEventListener("error", endIntro);
+        overlay.addEventListener("click", startIntro);
+        overlay.addEventListener("touchstart", startIntro, {
+          passive: false,
+        });
+        overlay.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") startIntro(e);
+        });
 
-          /* =====================================================
+        introVideo.addEventListener("timeupdate", function () {
+          if (!introVideo.duration) return;
+          if (introVideo.duration - introVideo.currentTime < 0.8) {
+            endIntro();
+          }
+        });
+        introVideo.addEventListener("ended", endIntro);
+        introVideo.addEventListener("error", endIntro);
+        var introSource = introVideo.querySelector("source");
+        if (introSource) introSource.addEventListener("error", endIntro);
+
+        /* =====================================================
          JS BLOCK 2 — FLOATING AUDIO CONTROL
          ===================================================== */
-          audioToggle.addEventListener("click", function () {
-            if (audio.paused) {
-              audio.play();
-              audioToggle.classList.remove("is-paused");
-              audioToggle.setAttribute("aria-label", "Pause background music");
-            } else {
-              audio.pause();
-              audioToggle.classList.add("is-paused");
-              audioToggle.setAttribute("aria-label", "Play background music");
-            }
-          });
+        audioToggle.addEventListener("click", function () {
+          if (audio.paused) {
+            audio.play();
+            audioToggle.classList.remove("is-paused");
+            audioToggle.setAttribute("aria-label", "Pause background music");
+          } else {
+            audio.pause();
+            audioToggle.classList.add("is-paused");
+            audioToggle.setAttribute("aria-label", "Play background music");
+          }
+        });
 
-          /* =====================================================
+        /* =====================================================
          JS BLOCK 3 — COUNTDOWN
          Fixed target: August 21, 2026 at 5:00 PM (local time).
          ===================================================== */
-          var target = new Date(2026, 7, 21, 17, 0, 0);
-          var countdownEl = document.getElementById("countdown");
-          var daysEl = document.getElementById("cdDays");
-          var hoursEl = document.getElementById("cdHours");
-          var minutesEl = document.getElementById("cdMinutes");
-          var secondsEl = document.getElementById("cdSeconds");
-          var countdownTimer = null;
+        var target = new Date(2026, 7, 21, 17, 0, 0);
+        var countdownEl = document.getElementById("countdown");
+        var daysEl = document.getElementById("cdDays");
+        var hoursEl = document.getElementById("cdHours");
+        var minutesEl = document.getElementById("cdMinutes");
+        var secondsEl = document.getElementById("cdSeconds");
+        var countdownTimer = null;
 
-          function updateCountdown() {
-            var diff = target.getTime() - Date.now();
+        function updateCountdown() {
+          var diff = target.getTime() - Date.now();
 
-            if (diff <= 0) {
-              if (countdownTimer) clearInterval(countdownTimer);
-              countdownEl.innerHTML =
-                '<span class="countdown-complete">See you there!</span>';
-              return;
-            }
-
-            var totalSeconds = Math.floor(diff / 1000);
-            var days = Math.floor(totalSeconds / 86400);
-            var hours = Math.floor((totalSeconds % 86400) / 3600);
-            var minutes = Math.floor((totalSeconds % 3600) / 60);
-            var seconds = totalSeconds % 60;
-
-            daysEl.textContent = String(days);
-            hoursEl.textContent = String(hours).padStart(2, "0");
-            minutesEl.textContent = String(minutes).padStart(2, "0");
-            secondsEl.textContent = String(seconds).padStart(2, "0");
+          if (diff <= 0) {
+            if (countdownTimer) clearInterval(countdownTimer);
+            countdownEl.innerHTML =
+              '<span class="countdown-complete">See you there!</span>';
+            return;
           }
 
-          updateCountdown();
-          countdownTimer = setInterval(updateCountdown, 1000);
+          var totalSeconds = Math.floor(diff / 1000);
+          var days = Math.floor(totalSeconds / 86400);
+          var hours = Math.floor((totalSeconds % 86400) / 3600);
+          var minutes = Math.floor((totalSeconds % 3600) / 60);
+          var seconds = totalSeconds % 60;
 
-          /* =====================================================
+          daysEl.textContent = String(days);
+          hoursEl.textContent = String(hours).padStart(2, "0");
+          minutesEl.textContent = String(minutes).padStart(2, "0");
+          secondsEl.textContent = String(seconds).padStart(2, "0");
+        }
+
+        updateCountdown();
+        countdownTimer = setInterval(updateCountdown, 1000);
+
+        /* =====================================================
          JS BLOCK 4 — SCROLL REVEAL
          ===================================================== */
-          var revealEls = document.querySelectorAll(".reveal, .reveal-soft");
+        var revealEls = document.querySelectorAll(".reveal, .reveal-soft");
 
-          if ("IntersectionObserver" in window) {
-            var observer = new IntersectionObserver(
-              function (entries) {
-                entries.forEach(function (entry) {
-                  if (entry.isIntersecting) {
-                    entry.target.classList.add("in");
-                    observer.unobserve(entry.target);
-                  }
-                });
-              },
-              { threshold: 0.2 },
-            );
-            revealEls.forEach(function (el) {
-              observer.observe(el);
-            });
-          } else {
-            revealEls.forEach(function (el) {
-              el.classList.add("in");
-            });
-          }
-        })();
-      </script>
-    </p>
+        if ("IntersectionObserver" in window) {
+          var observer = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("in");
+                  observer.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.2 },
+          );
+          revealEls.forEach(function (el) {
+            observer.observe(el);
+          });
+        } else {
+          revealEls.forEach(function (el) {
+            el.classList.add("in");
+          });
+        }
+      })();
+    </script>
   </body>
 </html>
